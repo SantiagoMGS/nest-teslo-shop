@@ -4,29 +4,9 @@
 
 # Teslo API - Nest Learn App
 
-1. Levantar la base de datos
-
-```bash
-$ docker-compuse up -d
-```
-
-## Levantar base de dato
-
-## Project setup
-
-```bash
-$ yarn install
-```
-
-## Compile and run the project
-
-```bash
-# development
-$ yarn run start
-
-# watch mode
-$ yarn run start:dev
-
-# production mode
-$ yarn run start:prod
-```
+1. Clonar proyecto.
+2. Instalar dependencias `yarn install`
+3. Clonar el archivo `.env.template` y renombrarlo a `.env`
+4. Cambiar las variables de entorno
+5. Levantar la base de datos `docker-compuse up -d`
+6. Levantar el proyecto en modo dev `yarn start:dev`
