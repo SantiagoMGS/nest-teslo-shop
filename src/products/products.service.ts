@@ -12,7 +12,6 @@ import { Product } from './entities/product.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { validate as isUUID } from 'uuid';
-import { get } from 'http';
 
 @Injectable()
 export class ProductsService {
