@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Product, ProductImage } from './entities/';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
@@ -23,6 +23,8 @@ export class ProductsService {
 
     @InjectRepository(ProductImage)
     private readonly productImageRepository: Repository<ProductImage>,
+
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(createProductDto: CreateProductDto) {
@@ -91,18 +93,44 @@ export class ProductsService {
   }
 
   async update(id: string, updateProductDto: UpdateProductDto) {
-    const product = await this.productRepository.preload({
-      id: id,
-      ...updateProductDto,
-      images: [],
-    });
+    const { images, ...toUpdate } = updateProductDto;
+
+    const product = await this.productRepository.preload({ id, ...toUpdate });
 
     if (!product)
       throw new NotFoundException(`Product with id ${id} not found`);
+
+    // Create query runner
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    // Empezar la transacción
+    await queryRunner.startTransaction();
+
     try {
-      await this.productRepository.save(product);
-      return product;
+      if (images) {
+        await queryRunner.manager.delete(ProductImage, {
+          product: { id: product.id },
+        });
+
+        product.images = images.map((image) =>
+          this.productImageRepository.create({ url: image }),
+        );
+      } else {
+        //
+      }
+
+      await queryRunner.manager.save(product);
+
+      // Si todo va bien, hacer commit
+      await queryRunner.commitTransaction();
+
+      await queryRunner.release();
+
+      // await this.productRepository.save(product);
+      return this.findOnePlain(id);
     } catch (error) {
+      // Si hay un error, deshacer la transacción
+      await queryRunner.rollbackTransaction();
       this.handleDBException(error);
     }
   }
