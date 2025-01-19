@@ -10,12 +10,16 @@ import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 
 import * as bcrypt from 'bcrypt';
+import { JwtPayload } from './interfaces/jwt-payload.interface';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+
+    private readonly jwtService: JwtService,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
@@ -29,8 +33,7 @@ export class AuthService {
       await this.userRepository.save(user);
       // Manejar el retorno de la información sensible
       delete user.password;
-      return user;
-      // TODO: Implementar JWT
+      return { ...user, token: this.getJwtToken({ email: user.email }) };
     } catch (error) {
       this.handleDBErrors(error);
     }
@@ -40,7 +43,7 @@ export class AuthService {
     const { password, email } = loginUserDto;
 
     const user = await this.userRepository.findOne({
-      where: { email },
+      where: { email: email.toLowerCase().trim() },
       select: { email: true, password: true },
     });
 
@@ -51,7 +54,12 @@ export class AuthService {
 
     // TODO: Implementar JWT
 
-    return user;
+    return { ...user, token: this.getJwtToken({ email: user.email }) };
+  }
+
+  private getJwtToken(payload: JwtPayload) {
+    const token = this.jwtService.sign(payload);
+    return token;
   }
 
   private handleDBErrors(error: any): never {
