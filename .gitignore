@@ -3,6 +3,8 @@
 /node_modules
 /build
 /postgres
+/public/products
+/static
 # Logs
 logs
 *.log

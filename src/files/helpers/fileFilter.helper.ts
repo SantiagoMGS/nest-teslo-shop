@@ -6,7 +6,7 @@ export const fileFilter = (
   // console.log(file);
   if (!file) return callback(new Error('File is empty'), false);
 
-  const validExtension = ['jpg', 'jpeg', 'png', 'gif'];
+  const validExtension = ['jpg', 'jpeg', 'png', 'gif', 'pdf'];
   const fileExtension = file.mimetype.split('/')[1];
 
   if (validExtension.includes(fileExtension)) {
